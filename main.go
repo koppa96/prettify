@@ -14,31 +14,45 @@ func main() {
 	}
 
 	document := doc.Doc{
-		Node: doc.Group{
-			Node: doc.Concat{
-				doc.Text("func foo("),
-				doc.Group{
-					Node: doc.Concat{
-						doc.Indent{
-							Node: doc.Concat{
-								doc.SoftLine{},
-								doc.Join{
-									Sep: doc.Line{},
-									Nodes: []doc.Node{
-										doc.Text("arg1 string,"),
-										doc.Text("arg2 int,"),
-										doc.Concat{
-											doc.Text("arg3 float64"),
-											doc.SoftComma{},
+		Node: doc.Concat{
+			doc.Text("import ("),
+			doc.Indent{
+				Node: doc.Concat{
+					doc.HardLine{},
+					doc.Text("\"fmt\""),
+					doc.HardLine{},
+					doc.Text("\"os\""),
+				},
+			},
+			doc.HardLine{},
+			doc.Text(")"),
+			doc.DoubleLine{},
+			doc.Group{
+				Node: doc.Concat{
+					doc.Text("func foo("),
+					doc.Group{
+						Node: doc.Concat{
+							doc.Indent{
+								Node: doc.Concat{
+									doc.SoftLine{},
+									doc.Join{
+										Sep: doc.Line{},
+										Nodes: []doc.Node{
+											doc.Text("arg1 string,"),
+											doc.Text("arg2 int,"),
+											doc.Concat{
+												doc.Text("arg3 float64"),
+												doc.SoftComma{},
+											},
 										},
 									},
 								},
 							},
+							doc.SoftLine{},
 						},
-						doc.SoftLine{},
 					},
+					doc.Text(") error"),
 				},
-				doc.Text(") error"),
 			},
 		},
 	}
