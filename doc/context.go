@@ -6,12 +6,19 @@ import (
 	"github.com/koppa96/prettify/config"
 )
 
+// RenderContext contains the rendering state.
 type RenderContext struct {
-	Config        config.Config
-	IndentLevel   int
-	Flat          bool
+	// The settings the formatter was invoked with.
+	Config config.Config
+
+	// The current indentation level.
+	IndentLevel int
+
+	// Whether the currently rendering item should render flat.
+	Flat bool
+
+	// The current column position in the line.
 	CurrentColumn int
-	Writer        io.Writer
 }
 
 func (ctx *RenderContext) WriteIndent(w io.Writer) error {

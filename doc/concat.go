@@ -2,6 +2,7 @@ package doc
 
 import "io"
 
+// Concat is a document element that renders multiple Nodes after each other.
 type Concat []Node
 
 func (c Concat) Render(ctx *RenderContext, w io.Writer) error {

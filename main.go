@@ -9,7 +9,7 @@ import (
 
 func main() {
 	config := config.Config{
-		PrintWidth: 20,
+		PrintWidth: 51,
 		TabWidth:   4,
 	}
 
@@ -36,14 +36,13 @@ func main() {
 						Node: doc.Concat{
 							doc.SoftLine{},
 							doc.Group{
-								Node: doc.Concat{
-									doc.Join{
-										Sep: doc.Line{},
-										Nodes: []doc.Node{
-											doc.Text("arg1 string,"),
-											doc.Text("arg2 int,"),
-											doc.Text("arg3 float64"),
-										},
+								Dependent: true,
+								Node: doc.Join{
+									Sep: doc.Line{},
+									Nodes: []doc.Node{
+										doc.Text("arg1 string,"),
+										doc.Text("arg2 int,"),
+										doc.Text("arg3 float64"),
 									},
 								},
 							},
@@ -51,7 +50,29 @@ func main() {
 						},
 					},
 					doc.SoftLine{},
-					doc.Text(") error {"),
+					doc.Text(")"),
+					doc.Group{
+						Node: doc.Concat{
+							doc.Text(" ("),
+							doc.Indent{
+								Node: doc.Concat{
+									doc.SoftLine{},
+									doc.Join{
+										Sep: doc.Line{},
+										Nodes: []doc.Node{
+											doc.Text("string,"),
+											doc.Concat{
+												doc.Text("error"),
+												doc.SoftComma{},
+											},
+										},
+									},
+								},
+							},
+							doc.SoftLine{},
+							doc.Text(") {"),
+						},
+					},
 				},
 			},
 			doc.Indent{

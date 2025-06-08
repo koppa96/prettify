@@ -2,8 +2,12 @@ package doc
 
 import "io"
 
+// Join is a document element that renders it child nodes with the separating node between them.
 type Join struct {
-	Sep   Node
+	// The node that separates each child
+	Sep Node
+
+	// The child nodes
 	Nodes []Node
 }
 

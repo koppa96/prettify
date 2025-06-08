@@ -2,6 +2,7 @@ package doc
 
 import "io"
 
+// Indent is a document element that renders its content with increased indentation level.
 type Indent struct {
 	Node Node
 }

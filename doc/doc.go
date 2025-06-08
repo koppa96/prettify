@@ -6,6 +6,7 @@ import (
 	"github.com/koppa96/prettify/config"
 )
 
+// Doc is the representation of a text document.
 type Doc struct {
 	Node Node
 }
