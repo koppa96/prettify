@@ -9,12 +9,14 @@ import (
 
 func main() {
 	config := config.Config{
-		PrintWidth: 80,
+		PrintWidth: 20,
 		TabWidth:   4,
 	}
 
 	document := doc.Doc{
 		Node: doc.Concat{
+			doc.Text("package test"),
+			doc.DoubleLine{},
 			doc.Text("import ("),
 			doc.Indent{
 				Node: doc.Concat{
@@ -30,6 +32,32 @@ func main() {
 			doc.Group{
 				Node: doc.Concat{
 					doc.Text("func foo("),
+					doc.Indent{
+						Node: doc.Concat{
+							doc.SoftLine{},
+							doc.Group{
+								Node: doc.Concat{
+									doc.Join{
+										Sep: doc.Line{},
+										Nodes: []doc.Node{
+											doc.Text("arg1 string,"),
+											doc.Text("arg2 int,"),
+											doc.Text("arg3 float64"),
+										},
+									},
+								},
+							},
+							doc.SoftComma{},
+						},
+					},
+					doc.SoftLine{},
+					doc.Text(") error {"),
+				},
+			},
+			doc.Indent{
+				Node: doc.Concat{
+					doc.HardLine{},
+					doc.Text("err := fmt.Fprintf("),
 					doc.Group{
 						Node: doc.Concat{
 							doc.Indent{
@@ -38,10 +66,11 @@ func main() {
 									doc.Join{
 										Sep: doc.Line{},
 										Nodes: []doc.Node{
-											doc.Text("arg1 string,"),
-											doc.Text("arg2 int,"),
+											doc.Text("\"%s %d %f\","),
+											doc.Text("arg1,"),
+											doc.Text("arg2,"),
 											doc.Concat{
-												doc.Text("arg3 float64"),
+												doc.Text("arg3"),
 												doc.SoftComma{},
 											},
 										},
@@ -51,9 +80,11 @@ func main() {
 							doc.SoftLine{},
 						},
 					},
-					doc.Text(") error"),
+					doc.Text(")"),
 				},
 			},
+			doc.HardLine{},
+			doc.Text("}"),
 		},
 	}
 
