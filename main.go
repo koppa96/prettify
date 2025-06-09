@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	config := config.Config{
+	cfg := config.Config{
 		PrintWidth: 80,
 		TabWidth:   4,
 	}
@@ -106,7 +106,7 @@ func main() {
 		},
 	}
 
-	err := document.Render(config, os.Stdout)
+	err := document.Render(cfg, os.Stdout)
 	if err != nil {
 		panic(err)
 	}
