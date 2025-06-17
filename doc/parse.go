@@ -34,7 +34,7 @@ func parseDecl(decl dst.Decl) (Node, error) {
 	case *dst.GenDecl:
 		return parseGenDecl(d)
 	case *dst.FuncDecl:
-		return parseFuncDecl(d)
+		return parseFuncDecl(d), nil
 	default:
 		return nil, fmt.Errorf("unknown declaration type: %T", decl)
 	}
@@ -43,13 +43,13 @@ func parseDecl(decl dst.Decl) (Node, error) {
 func parseGenDecl(decl *dst.GenDecl) (Node, error) {
 	switch decl.Tok {
 	case token.IMPORT:
-		return parseImportDecl(decl)
+		return parseImportDecl(decl), nil
 	case token.TYPE:
-		return parseTypeDecl(decl)
+		return parseTypeDecl(decl), nil
 	case token.CONST:
-		return parseConstDecl(decl)
+		return parseConstDecl(decl), nil
 	case token.VAR:
-		return parseVarDecl(decl)
+		return parseVarDecl(decl), nil
 	default:
 		return nil, fmt.Errorf("unknown generic declaration token: %s", decl.Tok)
 	}
@@ -115,18 +115,18 @@ func parseImportSpec(spec *dst.ImportSpec) Node {
 	return Text(spec.Path.Value)
 }
 
-func parseTypeDecl(decl *dst.GenDecl) (Node, error) {
-
+func parseTypeDecl(decl *dst.GenDecl) Node {
+	return nil
 }
 
-func parseConstDecl(decl *dst.GenDecl) (Node, error) {
-
+func parseConstDecl(decl *dst.GenDecl) Node {
+	return nil
 }
 
-func parseVarDecl(decl *dst.GenDecl) (Node, error) {
-
+func parseVarDecl(decl *dst.GenDecl) Node {
+	return nil
 }
 
-func parseFuncDecl(decl *dst.FuncDecl) (Node, error) {
-
+func parseFuncDecl(decl *dst.FuncDecl) Node {
+	return nil
 }
