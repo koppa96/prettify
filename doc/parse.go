@@ -21,12 +21,10 @@ func Parse(file *dst.File) (*Doc, error) {
 			return nil, err
 		}
 
-		root = append(root, node, HardLine{})
+		root = append(root, HardLine{}, node, HardLine{})
 	}
 
-	return &Doc{
-		Node: root,
-	}, nil
+	return &Doc{root}, nil
 }
 
 func parseDecl(decl dst.Decl) (Node, error) {
@@ -80,7 +78,7 @@ func parseImportDecl(decl *dst.GenDecl) Node {
 
 	return Concat{
 		Text("import ("),
-		Indent{Node: specs},
+		Indent{specs},
 		HardLine{},
 		Text(")"),
 	}
@@ -116,7 +114,160 @@ func parseImportSpec(spec *dst.ImportSpec) Node {
 }
 
 func parseTypeDecl(decl *dst.GenDecl) Node {
+	if len(decl.Specs) == 1 {
+		return Group{
+			Concat{
+				Text("type "),
+				parseTypeSpec(decl.Specs[0].(*dst.TypeSpec)),
+			},
+		}
+	}
+
+	specs := make(Concat, 0, len(decl.Specs)*2)
+	for _, spec := range decl.Specs {
+		specs = append(specs, HardLine{}, Group{parseTypeSpec(spec.(*dst.TypeSpec))})
+	}
+
+	return Concat{
+		Text("type ("),
+		Indent{specs},
+		HardLine{},
+		Text(")"),
+	}
+}
+
+func parseTypeSpec(spec *dst.TypeSpec) Node {
+	node := Concat{Text(spec.Name.Name)}
+	if spec.TypeParams != nil {
+		node = append(node, Group{
+			Concat{
+				Text("["),
+				parseParamList(spec.TypeParams.List),
+				Text("]"),
+			},
+		})
+	}
+
+	return append(node, Space{}, parseExpr(spec.Type))
+}
+
+func parseParamList(list []*dst.Field) Node {
+	params := make([]Node, 0, len(list))
+	for _, param := range list {
+		params = append(params, parseParam(param))
+	}
+
+	return Concat{
+		Indent{
+			Concat{
+				SoftLine{},
+				Join{
+					Sep: Concat{
+						Comma{},
+						Line{},
+					},
+					Nodes: params,
+				},
+				SoftComma{},
+			},
+		},
+		SoftLine{},
+	}
+}
+
+func parseParam(param *dst.Field) Node {
+	if len(param.Names) == 0 {
+		return parseExpr(param.Type)
+	}
+
+	names := make([]Node, 0, len(param.Names))
+	for _, name := range param.Names {
+		names = append(names, Text(name.Name))
+	}
+
+	return Concat{
+		Join{
+			Sep: Concat{
+				Comma{},
+				Space{},
+			},
+			Nodes: names,
+		},
+		Space{},
+		parseExpr(param.Type),
+	}
+}
+
+func parseExpr(expr dst.Expr) Node {
+	switch e := expr.(type) {
+	case *dst.Ident:
+		return parseIdent(e)
+	case *dst.InterfaceType:
+		return parseInterfaceType(e)
+	}
+
 	return nil
+}
+
+func parseIdent(i *dst.Ident) Node {
+	if i.Path != "" {
+		return Textf("%s.%s", i.Path, i.Name)
+	}
+
+	return Text(i.Name)
+}
+
+func parseInterfaceType(i *dst.InterfaceType) Node {
+	if i.Methods == nil {
+		return Text("interface{}")
+	}
+
+	methods := make([]Node, 0, len(i.Methods.List))
+	for _, method := range i.Methods.List {
+		methods = append(methods, parseInterfaceMethod(method))
+	}
+
+	return Expand{
+		Concat{
+			Text("interface {"),
+			Indent{
+				Concat{
+					HardLine{},
+					Join{
+						Sep:   HardLine{},
+						Nodes: methods,
+					},
+				},
+			},
+			HardLine{},
+			Text("}"),
+		},
+	}
+}
+
+func parseInterfaceMethod(method *dst.Field) Node {
+	t := method.Type.(*dst.FuncType)
+
+	node := Concat{Textf("%s(", method.Names[0].Name)}
+	if t.Params != nil {
+		node = append(node, parseParamList(t.Params.List))
+	}
+	node = append(node, Text(")"))
+	if t.Results != nil {
+		if len(t.Results.List) == 1 && len(t.Results.List[0].Names) == 0 {
+			node = append(node, Space{}, parseExpr(t.Results.List[0].Type))
+		} else {
+			node = append(node, Group{
+				Concat{
+					Text(" ("),
+					parseParamList(t.Results.List),
+					Text(")"),
+				},
+			})
+		}
+	}
+
+	return Group{node}
 }
 
 func parseConstDecl(decl *dst.GenDecl) Node {

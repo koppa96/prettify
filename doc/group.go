@@ -2,6 +2,7 @@ package doc
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"unicode/utf8"
 )
@@ -21,13 +22,20 @@ func (g Group) Render(ctx *RenderContext, w io.Writer) error {
 	var buf bytes.Buffer
 	err := g.Node.Render(WithFlat(ctx, true), &buf)
 	if err != nil {
+		if errors.Is(err, ErrCannotRenderFlat) {
+			return g.Node.Render(ctx, w)
+		}
+
 		return err
 	}
 
-	if ctx.CurrentColumn+utf8.RuneCount(buf.Bytes()) > ctx.Config.PrintWidth {
+	runeCount := utf8.RuneCount(buf.Bytes())
+	if ctx.CurrentColumn+runeCount > ctx.Config.PrintWidth {
 		return g.Node.Render(ctx, w)
 	}
 
 	_, err = io.Copy(w, &buf)
+	ctx.CurrentColumn += runeCount
+
 	return err
 }
