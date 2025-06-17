@@ -1,6 +1,9 @@
 package doc
 
-import "io"
+import (
+	"fmt"
+	"io"
+)
 
 // Text is a document element that renders it string content.
 type Text string
@@ -13,4 +16,8 @@ func (t Text) Render(ctx *RenderContext, w io.Writer) error {
 
 	ctx.CurrentColumn += len(t)
 	return nil
+}
+
+func Textf(format string, args ...any) Text {
+	return Text(fmt.Sprintf(format, args...))
 }
