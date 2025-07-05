@@ -62,23 +62,43 @@ func parseImportDecl(decl *dst.GenDecl) Node {
 	}
 
 	std, ext := sortImportSpecs(decl)
-	specs := make(Concat, 0, 2*len(decl.Specs))
+
+	stdNodes := make([]Node, 0, len(std))
 	for _, spec := range std {
-		specs = append(specs, HardLine{}, parseImportSpec(spec))
+		stdNodes = append(stdNodes, parseImportSpec(spec))
 	}
 
-	for i, spec := range ext {
-		var prefix Node = HardLine{}
-		if i == 0 && len(std) > 0 {
-			prefix = DoubleLine{}
-		}
+	extNodes := make([]Node, 0, len(ext))
+	for _, spec := range ext {
+		extNodes = append(extNodes, parseImportSpec(spec))
+	}
 
-		specs = append(specs, prefix, parseImportSpec(spec))
+	var blocks []Node
+	if len(stdNodes) > 0 {
+		blocks = append(blocks, Join{
+			Sep:   HardLine{},
+			Nodes: stdNodes,
+		})
+	}
+
+	if len(extNodes) > 0 {
+		blocks = append(blocks, Join{
+			Sep:   HardLine{},
+			Nodes: extNodes,
+		})
 	}
 
 	return Concat{
 		Text("import ("),
-		Indent{specs},
+		Indent{
+			Concat{
+				HardLine{},
+				Join{
+					Sep:   DoubleLine{},
+					Nodes: blocks,
+				},
+			},
+		},
 		HardLine{},
 		Text(")"),
 	}
