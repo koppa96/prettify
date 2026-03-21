@@ -1,9 +1,9 @@
 package main
 
 import (
+	"go/parser"
+	"go/token"
 	"os"
-
-	"github.com/dave/dst/decorator"
 
 	"github.com/koppa96/prettify/config"
 	"github.com/koppa96/prettify/doc"
@@ -15,7 +15,8 @@ func main() {
 		TabWidth:   4,
 	}
 
-	f, err := decorator.Parse(`package foo
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, "", `package foo
 
 import (
 	"os"
@@ -24,16 +25,16 @@ import (
 	"io"
 )
 
-type Option func(opts *Options) error
+type Option func(ctx context.Context, opts *Options) error
 
 type Foo[T any] interface {
 	Bar(param1 string, param2 T, param4 VeryLongStructName) (result string, err error)
-}`)
+}`, parser.ParseComments)
 	if err != nil {
 		panic(err)
 	}
 
-	document, err := doc.Parse(f)
+	document, err := doc.Parse(file)
 	if err != nil {
 		panic(err)
 	}

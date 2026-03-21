@@ -2,15 +2,14 @@ package doc
 
 import (
 	"fmt"
+	"go/ast"
 	"go/token"
 	"slices"
 	"strings"
-
-	"github.com/dave/dst"
 )
 
-// Parse parses a [*dst.File] and transforms it into a Doc that can later be rendered.
-func Parse(file *dst.File) (*Doc, error) {
+// Parse parses a [*ast.File] and transforms it into a Doc that can later be rendered.
+func Parse(file *ast.File) (*Doc, error) {
 	root := Concat{
 		Textf("package %s", file.Name.Name),
 		HardLine{},
@@ -28,18 +27,18 @@ func Parse(file *dst.File) (*Doc, error) {
 	return &Doc{root}, nil
 }
 
-func parseDecl(decl dst.Decl) (Node, error) {
+func parseDecl(decl ast.Decl) (Node, error) {
 	switch d := decl.(type) {
-	case *dst.GenDecl:
+	case *ast.GenDecl:
 		return parseGenDecl(d)
-	case *dst.FuncDecl:
+	case *ast.FuncDecl:
 		return parseFuncDecl(d), nil
 	default:
 		return nil, fmt.Errorf("unknown declaration type: %T", decl)
 	}
 }
 
-func parseGenDecl(decl *dst.GenDecl) (Node, error) {
+func parseGenDecl(decl *ast.GenDecl) (Node, error) {
 	switch decl.Tok {
 	case token.IMPORT:
 		return parseImportDecl(decl), nil
@@ -54,11 +53,11 @@ func parseGenDecl(decl *dst.GenDecl) (Node, error) {
 	}
 }
 
-func parseImportDecl(decl *dst.GenDecl) Node {
+func parseImportDecl(decl *ast.GenDecl) Node {
 	if len(decl.Specs) == 1 {
 		return Concat{
 			Text("import "),
-			parseImportSpec(decl.Specs[0].(*dst.ImportSpec)),
+			parseImportSpec(decl.Specs[0].(*ast.ImportSpec)),
 		}
 	}
 
@@ -105,9 +104,9 @@ func parseImportDecl(decl *dst.GenDecl) Node {
 	}
 }
 
-func sortImportSpecs(decl *dst.GenDecl) (std []*dst.ImportSpec, ext []*dst.ImportSpec) {
+func sortImportSpecs(decl *ast.GenDecl) (std []*ast.ImportSpec, ext []*ast.ImportSpec) {
 	for _, spec := range decl.Specs {
-		importSpec := spec.(*dst.ImportSpec)
+		importSpec := spec.(*ast.ImportSpec)
 		if strings.ContainsRune(importSpec.Path.Value, '.') {
 			ext = append(ext, importSpec)
 		} else {
@@ -115,18 +114,18 @@ func sortImportSpecs(decl *dst.GenDecl) (std []*dst.ImportSpec, ext []*dst.Impor
 		}
 	}
 
-	slices.SortFunc(std, func(a, b *dst.ImportSpec) int {
+	slices.SortFunc(std, func(a, b *ast.ImportSpec) int {
 		return strings.Compare(a.Path.Value, b.Path.Value)
 	})
 
-	slices.SortFunc(ext, func(a, b *dst.ImportSpec) int {
+	slices.SortFunc(ext, func(a, b *ast.ImportSpec) int {
 		return strings.Compare(a.Path.Value, b.Path.Value)
 	})
 
 	return std, ext
 }
 
-func parseImportSpec(spec *dst.ImportSpec) Node {
+func parseImportSpec(spec *ast.ImportSpec) Node {
 	if spec.Name != nil {
 		return Textf("%s %s", spec.Name.Name, spec.Path.Value)
 	}
@@ -134,19 +133,19 @@ func parseImportSpec(spec *dst.ImportSpec) Node {
 	return Text(spec.Path.Value)
 }
 
-func parseTypeDecl(decl *dst.GenDecl) Node {
+func parseTypeDecl(decl *ast.GenDecl) Node {
 	if len(decl.Specs) == 1 {
 		return Group{
 			Concat{
 				Text("type "),
-				parseTypeSpec(decl.Specs[0].(*dst.TypeSpec)),
+				parseTypeSpec(decl.Specs[0].(*ast.TypeSpec)),
 			},
 		}
 	}
 
 	specs := make(Concat, 0, len(decl.Specs)*2)
 	for _, spec := range decl.Specs {
-		specs = append(specs, HardLine{}, Group{parseTypeSpec(spec.(*dst.TypeSpec))})
+		specs = append(specs, HardLine{}, Group{parseTypeSpec(spec.(*ast.TypeSpec))})
 	}
 
 	return Concat{
@@ -157,7 +156,7 @@ func parseTypeDecl(decl *dst.GenDecl) Node {
 	}
 }
 
-func parseTypeSpec(spec *dst.TypeSpec) Node {
+func parseTypeSpec(spec *ast.TypeSpec) Node {
 	node := Concat{Text(spec.Name.Name)}
 	if spec.TypeParams != nil {
 		node = append(node, Group{
@@ -172,7 +171,7 @@ func parseTypeSpec(spec *dst.TypeSpec) Node {
 	return append(node, Space{}, parseExpr(spec.Type))
 }
 
-func parseParamList(list []*dst.Field) Node {
+func parseParamList(list []*ast.Field) Node {
 	params := make([]Node, 0, len(list))
 	for _, param := range list {
 		params = append(params, parseParam(param))
@@ -196,7 +195,7 @@ func parseParamList(list []*dst.Field) Node {
 	}
 }
 
-func parseParam(param *dst.Field) Node {
+func parseParam(param *ast.Field) Node {
 	if len(param.Names) == 0 {
 		return parseExpr(param.Type)
 	}
@@ -219,32 +218,30 @@ func parseParam(param *dst.Field) Node {
 	}
 }
 
-func parseExpr(expr dst.Expr) Node {
+func parseExpr(expr ast.Expr) Node {
 	switch e := expr.(type) {
-	case *dst.Ident:
-		return parseIdent(e)
-	case *dst.InterfaceType:
+	case *ast.Ident:
+		return Text(e.Name)
+	case *ast.InterfaceType:
 		return parseInterfaceType(e)
-	case *dst.StructType:
+	case *ast.StructType:
 		return parseStructType(e)
-	case *dst.FuncType:
+	case *ast.FuncType:
 		return parseFuncType(e)
-	case *dst.StarExpr:
+	case *ast.StarExpr:
 		return Concat{Text("*"), parseExpr(e.X)}
+	case *ast.SelectorExpr:
+		return parseSelectorExpr(e)
 	}
 
 	return nil
 }
 
-func parseIdent(i *dst.Ident) Node {
-	if i.Path != "" {
-		return Textf("%s.%s", i.Path, i.Name)
-	}
-
-	return Text(i.Name)
+func parseSelectorExpr(s *ast.SelectorExpr) Node {
+	return Concat{parseExpr(s.X), Text("." + s.Sel.Name)}
 }
 
-func parseInterfaceType(i *dst.InterfaceType) Node {
+func parseInterfaceType(i *ast.InterfaceType) Node {
 	if i.Methods == nil {
 		return Text("interface{}")
 	}
@@ -272,8 +269,8 @@ func parseInterfaceType(i *dst.InterfaceType) Node {
 	}
 }
 
-func parseInterfaceMethod(method *dst.Field) Node {
-	t := method.Type.(*dst.FuncType)
+func parseInterfaceMethod(method *ast.Field) Node {
+	t := method.Type.(*ast.FuncType)
 
 	node := Concat{Textf("%s(", method.Names[0].Name)}
 	if t.Params != nil {
@@ -297,27 +294,27 @@ func parseInterfaceMethod(method *dst.Field) Node {
 	return Group{node}
 }
 
-func parseStructType(s *dst.StructType) Node {
+func parseStructType(s *ast.StructType) Node {
 	return nil
 }
 
-func parseFuncType(f *dst.FuncType) Node {
-	return parseInterfaceMethod(&dst.Field{
-		Names: []*dst.Ident{
+func parseFuncType(f *ast.FuncType) Node {
+	return parseInterfaceMethod(&ast.Field{
+		Names: []*ast.Ident{
 			{Name: "func"},
 		},
 		Type: f,
 	})
 }
 
-func parseConstDecl(decl *dst.GenDecl) Node {
+func parseConstDecl(decl *ast.GenDecl) Node {
 	return nil
 }
 
-func parseVarDecl(decl *dst.GenDecl) Node {
+func parseVarDecl(decl *ast.GenDecl) Node {
 	return nil
 }
 
-func parseFuncDecl(decl *dst.FuncDecl) Node {
+func parseFuncDecl(decl *ast.FuncDecl) Node {
 	return nil
 }
