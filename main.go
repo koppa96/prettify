@@ -24,7 +24,7 @@ import (
 	"io"
 )
 
-type Option func(opts Options) error
+type Option func(opts *Options) error
 
 type Foo[T any] interface {
 	Bar(param1 string, param2 T, param4 VeryLongStructName) (result string, err error)

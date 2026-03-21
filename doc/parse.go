@@ -229,6 +229,8 @@ func parseExpr(expr dst.Expr) Node {
 		return parseStructType(e)
 	case *dst.FuncType:
 		return parseFuncType(e)
+	case *dst.StarExpr:
+		return Concat{Text("*"), parseExpr(e.X)}
 	}
 
 	return nil
