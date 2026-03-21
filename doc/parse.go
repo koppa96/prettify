@@ -224,6 +224,8 @@ func parseExpr(expr dst.Expr) Node {
 		return parseIdent(e)
 	case *dst.InterfaceType:
 		return parseInterfaceType(e)
+	case *dst.StructType:
+		return parseStructType(e)
 	}
 
 	return nil
@@ -288,6 +290,10 @@ func parseInterfaceMethod(method *dst.Field) Node {
 	}
 
 	return Group{node}
+}
+
+func parseStructType(s *dst.StructType) Node {
+	return nil
 }
 
 func parseConstDecl(decl *dst.GenDecl) Node {

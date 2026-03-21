@@ -24,7 +24,7 @@ import (
 )
 
 type Foo[T any] interface {
-	Bar(param1 string, param2 T) (string, error)
+	Bar(param1 string, param2 T, param4 VeryLongStructName) (result string, err error)
 }`)
 	if err != nil {
 		panic(err)
