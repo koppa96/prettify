@@ -270,9 +270,16 @@ func parseInterfaceType(i *ast.InterfaceType) Node {
 }
 
 func parseInterfaceMethod(method *ast.Field) Node {
-	t := method.Type.(*ast.FuncType)
+	return Group{
+		Node: Concat{
+			Text(method.Names[0].Name),
+			parseSignature(method.Type.(*ast.FuncType)),
+		},
+	}
+}
 
-	node := Concat{Textf("%s(", method.Names[0].Name)}
+func parseSignature(t *ast.FuncType) Node {
+	node := Concat{Text("(")}
 	if t.Params != nil {
 		node = append(node, parseParamList(t.Params.List))
 	}
@@ -291,7 +298,7 @@ func parseInterfaceMethod(method *ast.Field) Node {
 		}
 	}
 
-	return Group{node}
+	return node
 }
 
 func parseStructType(s *ast.StructType) Node {
@@ -299,12 +306,12 @@ func parseStructType(s *ast.StructType) Node {
 }
 
 func parseFuncType(f *ast.FuncType) Node {
-	return parseInterfaceMethod(&ast.Field{
-		Names: []*ast.Ident{
-			{Name: "func"},
+	return Group{
+		Node: Concat{
+			Text("func"),
+			parseSignature(f),
 		},
-		Type: f,
-	})
+	}
 }
 
 func parseConstDecl(decl *ast.GenDecl) Node {
