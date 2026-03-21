@@ -2,10 +2,11 @@ package doc
 
 import (
 	"fmt"
-	"github.com/dave/dst"
 	"go/token"
 	"slices"
 	"strings"
+
+	"github.com/dave/dst"
 )
 
 // Parse parses a [*dst.File] and transforms it into a Doc that can later be rendered.
@@ -226,6 +227,8 @@ func parseExpr(expr dst.Expr) Node {
 		return parseInterfaceType(e)
 	case *dst.StructType:
 		return parseStructType(e)
+	case *dst.FuncType:
+		return parseFuncType(e)
 	}
 
 	return nil
@@ -294,6 +297,15 @@ func parseInterfaceMethod(method *dst.Field) Node {
 
 func parseStructType(s *dst.StructType) Node {
 	return nil
+}
+
+func parseFuncType(f *dst.FuncType) Node {
+	return parseInterfaceMethod(&dst.Field{
+		Names: []*dst.Ident{
+			{Name: "func"},
+		},
+		Type: f,
+	})
 }
 
 func parseConstDecl(decl *dst.GenDecl) Node {

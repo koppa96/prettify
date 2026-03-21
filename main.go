@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/dave/dst/decorator"
 	"os"
+
+	"github.com/dave/dst/decorator"
 
 	"github.com/koppa96/prettify/config"
 	"github.com/koppa96/prettify/doc"
@@ -22,6 +23,8 @@ import (
 	_ "github.com/lib/pq"
 	"io"
 )
+
+type Option func(opts Options) error
 
 type Foo[T any] interface {
 	Bar(param1 string, param2 T, param4 VeryLongStructName) (result string, err error)
