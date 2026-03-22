@@ -44,7 +44,12 @@ var (
 	alma4 = true
 )
 
-var names = []string{"Name1", "Name2", "Name3", "Name4", "Name5", "Name6", "Name7"}
+var names1 = []string{
+	"Name1",
+	"Name2",
+}
+
+var names2 = []string{"Name1", "Name2", "Name3", "Name4", "Name5", "Name6", "Name7"}
 
 type Foo[T any] interface {
 	Bar(param1 string, param2 T, param4 VeryLongStructName) (result string, err error)
