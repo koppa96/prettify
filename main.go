@@ -53,6 +53,12 @@ var names2 = []string{"Name1", "Name2", "Name3", "Name4", "Name5", "Name6", "Nam
 
 type Foo[T any] interface {
 	Bar(param1 string, param2 T, param4 VeryLongStructName) (result string, err error)
+}
+
+type Impl struct{}
+
+func (i *Impl) Bar(param1 string, param2 int, param4 VeryLongStructName) (string, error) {
+
 }`, parser.ParseComments)
 	if err != nil {
 		panic(err)

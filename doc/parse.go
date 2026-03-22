@@ -326,7 +326,7 @@ func parseSignature(t *ast.FuncType) Node {
 }
 
 func parseStructType(s *ast.StructType) Node {
-	return nil
+	return Text("struct{}")
 }
 
 func parseFuncType(f *ast.FuncType) Node {
@@ -417,5 +417,25 @@ func parseValueSpec(spec *ast.ValueSpec) Node {
 }
 
 func parseFuncDecl(decl *ast.FuncDecl) Node {
-	return nil
+	nodes := []Node{Text("func ")}
+	if decl.Recv != nil {
+		nodes = append(nodes, Group{
+			Concat(
+				Text("("),
+				Indent{
+					Concat(
+						SoftLine{},
+						Textf("%s ", decl.Recv.List[0].Names[0].Name),
+						parseExpr(decl.Recv.List[0].Type),
+					),
+				},
+				SoftLine{},
+				Text(") "),
+			),
+		})
+	}
+
+	nodes = append(nodes, Text(decl.Name.Name), parseSignature(decl.Type), Text(" {}"))
+
+	return Concat(nodes...)
 }
