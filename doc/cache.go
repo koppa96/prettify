@@ -6,7 +6,7 @@ type lengthCache struct {
 	canBeFlat  bool
 }
 
-func (lc lengthCache) flatLength(calculate func() (int, bool)) (int, bool) {
+func (lc *lengthCache) flatLength(calculate func() (int, bool)) (int, bool) {
 	if lc.calculated {
 		return lc.length, lc.canBeFlat
 	}
