@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"reflect"
 	"slices"
 	"strings"
 )
@@ -212,9 +213,11 @@ func parseExpr(expr ast.Expr) Node {
 		return Concat(Text("*"), parseExpr(e.X))
 	case *ast.SelectorExpr:
 		return parseSelectorExpr(e)
+	case *ast.BasicLit:
+		return Text(e.Value)
 	}
 
-	return nil
+	panic("unknown expression type: " + reflect.TypeOf(expr).Elem().Name())
 }
 
 func parseSelectorExpr(s *ast.SelectorExpr) Node {
@@ -294,7 +297,81 @@ func parseConstDecl(decl *ast.GenDecl) Node {
 }
 
 func parseVarDecl(decl *ast.GenDecl) Node {
-	return nil
+	if len(decl.Specs) == 1 {
+		return Concat(
+			Text("var "),
+			parseValueSpec(decl.Specs[0].(*ast.ValueSpec)),
+		)
+	}
+
+	nodes := make([]Node, 0, len(decl.Specs))
+	for _, spec := range decl.Specs {
+		nodes = append(nodes, parseValueSpec(spec.(*ast.ValueSpec)))
+	}
+
+	return Concat(
+		Text("var ("),
+		Indent{
+			Concat(
+				HardLine{},
+				Join(nodes, HardLine{}),
+			),
+		},
+		HardLine{},
+		Text(")"),
+	)
+}
+
+func parseValueSpec(spec *ast.ValueSpec) Node {
+	var names Node
+	if len(spec.Names) == 0 {
+		names = Text(spec.Names[0].Name)
+	} else {
+		nameNodes := make([]Node, 0, len(spec.Names))
+		for _, name := range spec.Names {
+			nameNodes = append(nameNodes, Text(name.Name))
+		}
+
+		names = Group{
+			Indent{
+				Join(nameNodes, Concat(Comma{}, Line{})),
+			},
+		}
+	}
+
+	nodes := []Node{names}
+	if (spec.Type) != nil {
+		nodes = append(nodes, Space{}, parseExpr(spec.Type))
+	}
+
+	if len(spec.Values) == 0 {
+		return Concat(nodes...)
+	}
+
+	nodes = append(nodes, Text(" = "))
+
+	var values Node
+	if len(spec.Values) == 1 {
+		values = Group{
+			Indent{
+				parseExpr(spec.Values[0]),
+			},
+		}
+	} else {
+		valueNodes := make([]Node, 0, len(spec.Values))
+		for _, value := range spec.Values {
+			valueNodes = append(valueNodes, parseExpr(value))
+		}
+
+		values = Group{
+			Indent{
+				Join(valueNodes, Concat(Comma{}, Line{})),
+			},
+		}
+	}
+
+	nodes = append(nodes, values)
+	return Concat(nodes...)
 }
 
 func parseFuncDecl(decl *ast.FuncDecl) Node {

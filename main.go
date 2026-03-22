@@ -27,6 +27,23 @@ import (
 
 type Option func(ctx context.Context, opts *Options) error
 
+var alma int
+
+var (
+	alma int
+barack string
+)
+
+var citrom = "hello"
+var dinnye = false
+var korte = 1
+
+var (
+	alma1, alma2 int
+	alma3 = "höhö"
+	alma4 = true
+)
+
 type Foo[T any] interface {
 	Bar(param1 string, param2 T, param4 VeryLongStructName) (result string, err error)
 }`, parser.ParseComments)
