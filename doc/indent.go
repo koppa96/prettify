@@ -12,5 +12,12 @@ func (i Indent) FlatLength() (int, bool) {
 }
 
 func (i Indent) Render(ctx *RenderContext, w io.Writer) error {
-	return i.Node.Render(WithIndent(ctx, ctx.IndentLevel+1), w)
+	indentCtx := WithIndent(ctx, ctx.IndentLevel+1)
+	err := i.Node.Render(indentCtx, w)
+	if err != nil {
+		return err
+	}
+
+	ctx.CurrentColumn = indentCtx.CurrentColumn
+	return nil
 }

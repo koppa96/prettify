@@ -29,5 +29,12 @@ func (g Group) Render(ctx *RenderContext, w io.Writer) error {
 		return g.Node.Render(ctx, w)
 	}
 
-	return g.Node.Render(WithFlat(ctx, true), w)
+	flatCtx := WithFlat(ctx, true)
+	err := g.Node.Render(flatCtx, w)
+	if err != nil {
+		return err
+	}
+
+	ctx.CurrentColumn = flatCtx.CurrentColumn
+	return nil
 }
