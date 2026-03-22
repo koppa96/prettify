@@ -215,9 +215,55 @@ func parseExpr(expr ast.Expr) Node {
 		return parseSelectorExpr(e)
 	case *ast.BasicLit:
 		return Text(e.Value)
+	case *ast.ArrayType:
+		return parseArrayType(e)
+	case *ast.CompositeLit:
+		return parseCompositeLit(e)
 	}
 
 	panic("unknown expression type: " + reflect.TypeOf(expr).Elem().Name())
+}
+
+func parseCompositeLit(lit *ast.CompositeLit) Node {
+	if len(lit.Elts) == 0 {
+		return Concat(parseExpr(lit.Type), Text("{}"))
+	}
+
+	elts := make([]Node, 0, len(lit.Elts))
+	for _, el := range lit.Elts {
+		elts = append(elts, parseExpr(el))
+	}
+
+	return Concat(
+		parseExpr(lit.Type),
+		Group{
+			Concat(
+				Text("{"),
+				Indent{
+					Concat(
+						SoftLine{},
+						Join(elts, Concat(Comma{}, Line{})),
+						SoftComma{},
+					),
+				},
+				SoftLine{},
+				Text("}"),
+			),
+		},
+	)
+}
+
+func parseArrayType(a *ast.ArrayType) Node {
+	if a.Len == nil {
+		return Concat(Text("[]"), parseExpr(a.Elt))
+	}
+
+	return Concat(
+		Text("["),
+		parseExpr(a.Len),
+		Text("]"),
+		parseExpr(a.Elt),
+	)
 }
 
 func parseSelectorExpr(s *ast.SelectorExpr) Node {
@@ -352,11 +398,7 @@ func parseValueSpec(spec *ast.ValueSpec) Node {
 
 	var values Node
 	if len(spec.Values) == 1 {
-		values = Group{
-			Indent{
-				parseExpr(spec.Values[0]),
-			},
-		}
+		values = parseExpr(spec.Values[0])
 	} else {
 		valueNodes := make([]Node, 0, len(spec.Values))
 		for _, value := range spec.Values {
