@@ -6,6 +6,10 @@ import "io"
 // and renders a new line followed by the correct amount of indentation based on the context when rendered in an expanded context.
 type SoftLine struct{}
 
+func (SoftLine) FlatLength() (int, bool) {
+	return 0, true
+}
+
 func (SoftLine) Render(ctx *RenderContext, w io.Writer) error {
 	if ctx.Flat {
 		return nil

@@ -1,10 +1,7 @@
 package doc
 
 import (
-	"bytes"
-	"errors"
 	"io"
-	"unicode/utf8"
 )
 
 // Group is a document element that controls whether
@@ -14,28 +11,23 @@ type Group struct {
 	Node Node
 }
 
+func (g Group) FlatLength() (int, bool) {
+	return g.Node.FlatLength()
+}
+
 func (g Group) Render(ctx *RenderContext, w io.Writer) error {
 	if ctx.Flat {
 		return g.Node.Render(ctx, w)
 	}
 
-	var buf bytes.Buffer
-	err := g.Node.Render(WithFlat(ctx, true), &buf)
-	if err != nil {
-		if errors.Is(err, ErrCannotRenderFlat) {
-			return g.Node.Render(ctx, w)
-		}
-
-		return err
-	}
-
-	runeCount := utf8.RuneCount(buf.Bytes())
-	if ctx.CurrentColumn+runeCount > ctx.Config.PrintWidth {
+	flatLength, ok := g.Node.FlatLength()
+	if !ok {
 		return g.Node.Render(ctx, w)
 	}
 
-	_, err = io.Copy(w, &buf)
-	ctx.CurrentColumn += runeCount
+	if ctx.CurrentColumn+flatLength > ctx.Config.PrintWidth {
+		return g.Node.Render(ctx, w)
+	}
 
-	return err
+	return g.Node.Render(WithFlat(ctx, true), w)
 }

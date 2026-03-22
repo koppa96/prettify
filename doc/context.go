@@ -1,6 +1,7 @@
 package doc
 
 import (
+	"bytes"
 	"io"
 
 	"github.com/koppa96/prettify/config"
@@ -21,18 +22,19 @@ type RenderContext struct {
 	CurrentColumn int
 }
 
+var tabBuf = bytes.Repeat([]byte{'\t'}, 10)
+
 func (ctx *RenderContext) WriteIndent(w io.Writer) error {
 	if ctx.IndentLevel == 0 {
 		ctx.CurrentColumn = 0
 		return nil
 	}
 
-	chars := make([]byte, ctx.IndentLevel)
-	for i := range chars {
-		chars[i] = '\t'
+	if len(tabBuf) < ctx.IndentLevel {
+		tabBuf = append(tabBuf, bytes.Repeat([]byte{'\t'}, ctx.IndentLevel-len(tabBuf))...)
 	}
 
-	_, err := w.Write(chars)
+	_, err := w.Write(tabBuf[:ctx.IndentLevel])
 	if err != nil {
 		return err
 	}

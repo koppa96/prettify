@@ -6,6 +6,10 @@ import "io"
 // followed by the correct amount of indentation based on the context.
 type HardLine struct{}
 
+func (HardLine) FlatLength() (int, bool) {
+	return 0, false
+}
+
 func (HardLine) Render(ctx *RenderContext, w io.Writer) error {
 	_, err := w.Write([]byte{'\n'})
 	if err != nil {

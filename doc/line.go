@@ -6,6 +6,10 @@ import "io"
 // or a new line followed by the correct amount of indentation based on the context, if rendered in an expanded context.
 type Line struct{}
 
+func (Line) FlatLength() (int, bool) {
+	return 1, true
+}
+
 func (Line) Render(ctx *RenderContext, w io.Writer) error {
 	if ctx.Flat {
 		_, err := w.Write([]byte{' '})

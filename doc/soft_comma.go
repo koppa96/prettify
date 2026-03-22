@@ -6,6 +6,10 @@ import "io"
 // and renders a comma if rendered in an expanded context.
 type SoftComma struct{}
 
+func (SoftComma) FlatLength() (int, bool) {
+	return 0, true
+}
+
 func (SoftComma) Render(ctx *RenderContext, w io.Writer) error {
 	if ctx.Flat {
 		return nil
