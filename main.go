@@ -58,7 +58,7 @@ type Foo[T any] interface {
 type Impl struct{}
 
 func (i *Impl) Bar(param1 string, param2 int, param4 VeryLongStructName) (string, error) {
-
+	return "", nil
 }`, parser.ParseComments)
 	if err != nil {
 		panic(err)

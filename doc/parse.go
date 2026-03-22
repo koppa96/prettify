@@ -435,7 +435,73 @@ func parseFuncDecl(decl *ast.FuncDecl) Node {
 		})
 	}
 
-	nodes = append(nodes, Text(decl.Name.Name), parseSignature(decl.Type), Text(" {}"))
+	nodes = append(
+		nodes,
+		Text(decl.Name.Name),
+		parseSignature(decl.Type),
+	)
+
+	if decl.Body == nil || len(decl.Body.List) == 0 {
+		nodes = append(nodes, Text(" {}"))
+		return Concat(nodes...)
+	}
+
+	nodes = append(nodes, parseBlockStmt(decl.Body))
 
 	return Concat(nodes...)
+}
+
+func parseBlockStmt(s *ast.BlockStmt) Node {
+	stmts := make([]Node, 0, len(s.List))
+	for _, stmt := range s.List {
+		stmts = append(stmts, parseStmt(stmt))
+	}
+
+	return Concat(
+		Text("{"),
+		Indent{
+			Concat(
+				HardLine{},
+				Join(stmts, HardLine{}),
+			),
+		},
+		HardLine{},
+		Text("}"),
+	)
+}
+
+func parseStmt(stmt ast.Stmt) Node {
+	switch s := stmt.(type) {
+	case *ast.ReturnStmt:
+		return parseReturnStmt(s)
+	}
+
+	panic("unknown statement type: " + reflect.TypeOf(stmt).Elem().Name())
+}
+
+func parseReturnStmt(s *ast.ReturnStmt) Node {
+	if len(s.Results) == 0 {
+		return Text("return")
+	}
+
+	if len(s.Results) == 1 {
+		return Concat(
+			Text("return "),
+			parseExpr(s.Results[0]),
+		)
+	}
+
+	results := make([]Node, 0, len(s.Results))
+	for _, r := range s.Results {
+		results = append(results, parseExpr(r))
+	}
+
+	return Concat(
+		Text("return "),
+		Group{
+			Indent{
+				Join(results, Concat(Comma{}, Line{})),
+			},
+		},
+	)
 }
