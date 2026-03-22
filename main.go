@@ -59,6 +59,12 @@ type Impl struct{}
 
 func (i *Impl) Bar(param1 string, param2 int, param4 VeryLongStructName) (string, error) {
 	return "", nil
+}
+
+func MyMessageHandler(dep1 *dependencies.Dep1) func(ctx context.Context, msg *core.Message) error {
+	return func(ctx context.Context, msg *core.Message) error {
+		return nil
+	}
 }`, parser.ParseComments)
 	if err != nil {
 		panic(err)

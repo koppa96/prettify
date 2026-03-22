@@ -219,9 +219,27 @@ func parseExpr(expr ast.Expr) Node {
 		return parseArrayType(e)
 	case *ast.CompositeLit:
 		return parseCompositeLit(e)
+	case *ast.FuncLit:
+		return parseFuncLit(e)
 	}
 
 	panic("unknown expression type: " + reflect.TypeOf(expr).Elem().Name())
+}
+
+func parseFuncLit(lit *ast.FuncLit) Node {
+	if lit.Body == nil || len(lit.Body.List) == 0 {
+		return Concat(
+			Text("func"),
+			parseSignature(lit.Type),
+			Text(" {}"),
+		)
+	}
+
+	return Concat(
+		Text("func"),
+		parseSignature(lit.Type),
+		parseBlockStmt(lit.Body),
+	)
 }
 
 func parseCompositeLit(lit *ast.CompositeLit) Node {
@@ -458,7 +476,7 @@ func parseBlockStmt(s *ast.BlockStmt) Node {
 	}
 
 	return Concat(
-		Text("{"),
+		Text(" {"),
 		Indent{
 			Concat(
 				HardLine{},
