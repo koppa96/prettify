@@ -340,7 +340,9 @@ func parseSignature(t *ast.FuncType) Node {
 		}
 	}
 
-	return Concat(nodes...)
+	return Group{
+		Concat(nodes...),
+	}
 }
 
 func parseStructType(s *ast.StructType) Node {
