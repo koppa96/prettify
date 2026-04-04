@@ -24,6 +24,7 @@ func Greet(name string) string {
 
 func MyMessageHandler(dep1 *dependencies.Dep1) func(ctx context.Context, msg *core.Message) error {
 	return func(ctx context.Context) error {
+		var cb func(ctx context.Context, dep1 *dependencies.Dep1, name string, age int) error
 		return nil
 	}
 }`, parser.ParseComments)

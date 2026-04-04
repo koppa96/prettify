@@ -524,9 +524,20 @@ func parseStmt(stmt ast.Stmt) Node {
 	switch s := stmt.(type) {
 	case *ast.ReturnStmt:
 		return parseReturnStmt(s)
+	case *ast.DeclStmt:
+		return parseDeclStmt(s)
 	}
 
 	panic("unknown statement type: " + reflect.TypeOf(stmt).Elem().Name())
+}
+
+func parseDeclStmt(s *ast.DeclStmt) Node {
+	node, err := parseDecl(s.Decl)
+	if err != nil {
+		panic(err)
+	}
+
+	return node
 }
 
 func parseReturnStmt(s *ast.ReturnStmt) Node {
