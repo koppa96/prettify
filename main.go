@@ -18,51 +18,12 @@ func main() {
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, "", `package foo
 
-import (
-	"os"
-	"fmt"
-	_ "github.com/lib/pq"
-	"io"
-)
-
-type Option func(ctx context.Context, opts *Options) error
-
-var alma int
-
-var (
-	alma int
-barack string
-)
-
-var citrom = "hello"
-var dinnye = false
-var korte = 1
-
-var (
-	alma1, alma2 int
-	alma3 = "höhö"
-	alma4 = true
-)
-
-var names1 = []string{
-	"Name1",
-	"Name2",
-}
-
-var names2 = []string{"Name1", "Name2", "Name3", "Name4", "Name5", "Name6", "Name7"}
-
-type Foo[T any] interface {
-	Bar(param1 string, param2 T, param4 VeryLongStructName) (result string, err error)
-}
-
-type Impl struct{}
-
-func (i *Impl) Bar(param1 string, param2 int, param4 VeryLongStructName) (string, error) {
-	return "", nil
+func Greet(name string) string {
+	return "Hello" + "Szia" + "Csá" + "Jó napot" + "Üdvözöllek" + "Jó estét" + name
 }
 
 func MyMessageHandler(dep1 *dependencies.Dep1) func(ctx context.Context, msg *core.Message) error {
-	return func(ctx context.Context, msg *core.Message) error {
+	return func(ctx context.Context) error {
 		return nil
 	}
 }`, parser.ParseComments)

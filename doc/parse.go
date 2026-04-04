@@ -221,9 +221,39 @@ func parseExpr(expr ast.Expr) Node {
 		return parseCompositeLit(e)
 	case *ast.FuncLit:
 		return parseFuncLit(e)
+	case *ast.BinaryExpr:
+		return parseBinaryExpr(e)
 	}
 
 	panic("unknown expression type: " + reflect.TypeOf(expr).Elem().Name())
+}
+
+func parseBinaryExpr(e *ast.BinaryExpr) Node {
+	operands := []ast.Expr{e.Y}
+	operators := []token.Token{e.Op}
+
+	current := e.X
+	for {
+		if binary, ok := current.(*ast.BinaryExpr); ok {
+			operands = append(operands, binary.Y)
+			operators = append(operators, binary.Op)
+			current = binary.X
+		} else {
+			operands = append(operands, current)
+			break
+		}
+	}
+
+	nodes := []Node{parseExpr(operands[len(operands)-1])}
+	for i := len(operands) - 2; i >= 0; i-- {
+		nodes = append(nodes, Text(" "+operators[i].String()), Line{}, parseExpr(operands[i]))
+	}
+
+	return Group{
+		Indent{
+			Concat(nodes...),
+		},
+	}
 }
 
 func parseFuncLit(lit *ast.FuncLit) Node {
